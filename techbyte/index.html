@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechByte Advisor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* TechByte brand board: one dark world of near-black navy and deep purple, white ink, wide tech lettering.
+   Layout idea: a service counter. Chat on the left, a parts ticket (work order) on the right. */
+:root{
+  --bg:#02010A; --surface:#04052E; --surface-2:#0c0a42; --ink:#f5f4ff; --muted:#a9a8d2;
+  --line:#27267c; --accent:#22007C; --accent-2:#0D00A4; --accent-mid:#4a3ae0; --accent-hi:#a394ff;
+  --accent-ink:#ffffff; --accent-soft:#140152;
+  --good:#5fd08a; --warn:#f0a94a; --bad:#f08573;
+  --wordmark:"Orbitron","Manrope",system-ui,sans-serif;
+  --display:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background-color:var(--bg);background-image:linear-gradient(135deg,rgba(34,0,124,.6) 0%,rgba(2,1,10,0) 28%,rgba(2,1,10,0) 72%,rgba(13,0,164,.4) 100%);background-attachment:fixed;color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent-hi);outline-offset:2px}
+.app{display:flex;flex-direction:column;gap:14px;padding:16px;max-width:1280px;margin:0 auto;min-height:100%}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.brand{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap}
+.brand img{width:52px;height:52px;object-fit:cover;border-radius:13px;display:block}
+.brand h1{font-family:var(--wordmark);font-weight:700;font-size:24px;line-height:1;margin:0;letter-spacing:.08em}
+.brand .tag{margin:7px 0 0;font-size:10.5px;font-weight:600;letter-spacing:.36em;text-transform:uppercase;color:var(--muted)}
+.brand .sub{margin:0;color:var(--muted);font-size:14px;max-width:46ch;border-left:1px solid var(--accent-mid);padding-left:16px}
+.status{margin-left:auto;font-family:var(--mono);font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);display:flex;align-items:center;gap:6px}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.status.on i{background:var(--good)}
+.cols{display:grid;grid-template-columns:1fr;gap:14px;flex:1;min-height:0}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-height:0}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.panel-head h2{font-family:var(--display);font-weight:700;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;margin:0}
+/* chat */
+#log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;height:min(58vh,520px)}
+.msg{max-width:88%;padding:9px 12px;border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.bot{background:var(--surface-2);border:1px solid var(--line);align-self:flex-start;border-top-left-radius:2px}
+.msg.user{background:linear-gradient(135deg,var(--accent),var(--accent-2));border:1px solid var(--accent-mid);color:var(--accent-ink);align-self:flex-end;border-top-right-radius:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 10px}
+.chip{border:1px solid var(--accent-mid);background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px}
+.chip:hover{background:var(--accent-2);color:var(--accent-ink)}
+form.ask{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line)}
+form.ask input{flex:1;min-width:0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.btn{border:1px solid var(--accent-mid);background:linear-gradient(135deg,var(--accent),var(--accent-2));color:var(--accent-ink);border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500}
+.btn:disabled{opacity:.55;cursor:default}
+/* ticket */
+.tabs{display:flex;gap:4px}
+.tab{border:1px solid transparent;background:transparent;border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-mid);font-weight:600}
+.scroll{overflow-y:auto;padding:14px;flex:1;min-height:0}
+.ticket-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.ticket-top h3{font-family:var(--display);font-weight:800;font-size:21px;letter-spacing:-.015em;margin:0;line-height:1.2;text-wrap:balance}
+.ticket-top p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.pill{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.pill.good{color:var(--good)} .pill.warn{color:var(--warn)} .pill.bad{color:var(--bad)} .pill.note{color:var(--muted)}
+.rows{list-style:none;margin:10px 0 0;padding:0;border-top:1px dashed var(--line)}
+.rows li{display:grid;grid-template-columns:86px 1fr auto;gap:4px 12px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.cat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:3px}
+.pname{font-weight:700;letter-spacing:-.005em}
+.spec{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.why{grid-column:2 / 4;font-size:14px;border-left:3px solid var(--accent-mid);padding-left:10px;margin-top:2px}
+.why b{font-weight:600;color:var(--accent-hi)}
+.price{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+.totals{margin:12px 0 0;display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.totals .grand{font-size:18px;font-weight:600;border-top:2px solid var(--ink);padding-top:6px;margin-top:4px}
+.opts{display:grid;gap:8px;margin-top:14px;padding:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px}
+.opts h4,.checks h4{margin:0 0 2px;font-size:13px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.opts label{display:flex;gap:8px;align-items:flex-start;cursor:pointer}
+.opts label span small{display:block;color:var(--muted)}
+.taxrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.taxrow input{width:84px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:var(--mono)}
+.checks{margin-top:14px}
+.checks ul{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:4px}
+.checks li{display:flex;gap:8px;font-size:14px}
+.checks li::before{content:"OK";font-family:var(--mono);font-size:11px;color:var(--good);border:1px solid currentColor;border-radius:4px;padding:0 4px;height:18px;line-height:16px;flex:none;margin-top:2px}
+.checks li.no::before{content:"FIX";color:var(--bad)}
+.foot{margin-top:14px;font-size:13px;color:var(--muted)}
+.catgroup{margin-bottom:16px}
+.catgroup h4{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 4px;font-weight:500}
+.catgroup table{width:100%;border-collapse:collapse}
+.catgroup td{padding:6px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+.catgroup td:last-child{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:12px}
+[hidden]{display:none !important}
+@media (min-width:920px){
+  .app{height:100%}
+  .cols{grid-template-columns:minmax(340px,5fr) 7fr}
+  #log{height:auto}
+}
+@media (max-width:480px){
+  .rows li{grid-template-columns:1fr auto}
+  .cat{grid-column:1 / 3}
+  .why{grid-column:1 / 3}
+}
+@media (prefers-reduced-motion: no-preference){ #log{scroll-behavior:smooth} }
+
+/* ---- app sections ---- */
+:root{--term:#b9ffd9}
+.nav{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.status{margin-left:0}
+.nav a{color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:999px;border:1px solid transparent;font-weight:600;font-size:14px}
+.nav a:hover{color:var(--ink);border-color:var(--line)}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--accent-soft);border-color:var(--accent-mid)}
+.lead{margin:0 0 12px;color:var(--muted);max-width:65ch}
+.lbl{margin:16px 0 6px;font-size:12px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+.lbl:first-child{margin-top:0}
+.chips.flat{padding:0}
+.chip.on{background:var(--accent-2);color:var(--accent-ink);border-color:var(--accent-hi)}
+.mono{font-family:var(--mono)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.zap{list-style:none;margin:0;padding:0}
+.z{display:grid;grid-template-columns:34px 1fr;gap:12px;position:relative;padding-bottom:14px}
+.z:not(:last-child)::before{content:"";position:absolute;left:16px;top:34px;bottom:0;width:2px;background:var(--line)}
+.z.done:not(:last-child)::before{background:var(--accent-mid)}
+.znum{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-weight:600;border:2px solid var(--line);background:var(--surface-2)}
+.z.run .znum{border-color:var(--warn)} .z.done .znum{border-color:var(--accent-mid);background:var(--accent)} .z.fail .znum{border-color:var(--bad)}
+.zbody{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface-2);min-width:0}
+.z.run .zbody{border-color:var(--warn)}
+.zhead{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+.zkind{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-hi)}
+.zname{font-weight:700;margin:2px 0}
+.zout{font-size:14px;color:var(--muted);overflow-wrap:anywhere}
+.z.done .zout{color:var(--ink)}
+.tkwrap{overflow-x:auto}
+.tk{width:100%;border-collapse:collapse;font-size:14px}
+.tk th{text-align:left;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500;padding:4px 8px 6px 0}
+.tk td{padding:8px 8px 8px 0;border-top:1px dashed var(--line);vertical-align:top}
+.draft,.post{font-family:var(--mono);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;margin:0 0 10px}
+.post{min-height:150px;max-height:260px;overflow-y:auto;color:var(--term)}
+.meter{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.meter div{height:100%;background:linear-gradient(90deg,var(--accent-mid),var(--accent-hi));width:0}
+.meter div.over{background:var(--bad)}
+.tower{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;padding:12px;border:2px solid var(--line);border-radius:14px;background:var(--bg)}
+.tile{display:grid;gap:2px;text-align:left;padding:10px 12px;border-radius:8px;border:1px dashed var(--line);background:var(--surface);cursor:pointer;min-width:0}
+.tile.full{border-style:solid;border-color:var(--accent-mid);background:var(--accent-soft)}
+.tile.sel{outline:2px solid var(--accent-hi);outline-offset:1px}
+.tile .tname{font-weight:700;overflow-wrap:anywhere}
+.tile .tprice{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.t-case,.t-board,.t-gpu,.t-psu{grid-column:1 / 3}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+#shelf{display:grid;gap:6px;margin-bottom:6px}
+.part{display:flex;justify-content:space-between;gap:12px;text-align:left;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);cursor:pointer}
+.part:hover{border-color:var(--accent-mid)} .part.on{border-color:var(--accent-hi);background:var(--accent-soft)}
+.result{border:1px solid var(--line);border-left:4px solid var(--good);border-radius:8px;padding:12px;background:var(--surface-2)}
+.result.bad{border-left-color:var(--bad)}
+.result h4{margin:0 0 6px;font-size:17px} .result p{margin:0 0 8px}
+.stars{color:var(--warn);letter-spacing:2px} .stars i{font-style:normal;opacity:.25}
+.bar{display:grid;grid-template-columns:120px 1fr 34px;gap:10px;align-items:center;margin:6px 0;font-size:14px}
+.bar .track{height:8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar .track div{height:100%;background:linear-gradient(90deg,var(--accent-mid),var(--accent-hi))}
+.bar b{font-family:var(--mono);text-align:right}
+textarea{color:inherit;width:100%;flex:1;min-height:340px;resize:vertical;padding:12px;border:0;background:var(--bg);font-family:var(--mono);font-size:13px;line-height:1.5;border-radius:0 0 10px 10px}
+.hint{padding:10px 14px;margin:0;color:var(--muted);font-size:14px;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <img src="assets/logo.png" alt="TechByte logo" width="52" height="52">
+      <div><h1>TECHBYTE</h1><p class="tag">AI PC Parts &amp; Support</p></div>
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="#advisor" id="nav-advisor">Advisor</a>
+      <a href="#workflow" id="nav-workflow">Workflow</a>
+      <a href="#simulator" id="nav-simulator">Build Simulator</a>
+      <a href="#brain" id="nav-brain">Instructions and Knowledge</a>
+    </nav>
+    <div class="status" id="status"><i></i><span id="statusText">Guided demo mode</span></div>
+  </header>
+
+  <!-- Advisor: chat plus build sheet -->
+  <div class="cols" id="view-advisor">
+    <section class="panel" aria-label="Chat with the advisor">
+      <div class="panel-head"><h2>Ask the advisor</h2><button class="btn ghost" id="reset" type="button">Start over</button></div>
+      <div id="log" aria-live="polite"></div>
+      <div class="chips" id="chips"></div>
+      <form class="ask" id="ask" autocomplete="off">
+        <input id="q" type="text" placeholder="Example: my PC will not turn on, or gaming PC about $1,500" aria-label="Your message">
+        <button class="btn" id="send" type="submit">Send</button>
+      </form>
+    </section>
+    <section class="panel" aria-label="Build sheet and parts catalog">
+      <div class="panel-head">
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tabBuild" aria-selected="true" type="button">Build sheet</button>
+          <button class="tab" role="tab" id="tabCat" aria-selected="false" type="button">Parts catalog</button>
+        </div>
+        <button class="btn ghost" id="copy" type="button">Copy build</button>
+      </div>
+      <div class="scroll" id="buildView">
+        <div class="ticket-top">
+          <div><h3 id="bTitle"></h3><p id="bBlurb"></p></div>
+          <span class="pill note" id="bFit"></span>
+        </div>
+        <ul class="rows" id="bRows"></ul>
+        <div class="totals" id="bTotals"></div>
+        <div class="opts">
+          <h4>Options</h4>
+          <label><input type="checkbox" id="optStorm"><span><b id="stormName"></b><small>Oklahoma storms and power flickers are hard on electronics.</small></span></label>
+          <label><input type="checkbox" id="optWin"><span><b id="winName"></b><small>Skip this if you already own a license or the PC includes one.</small></span></label>
+          <label><input type="checkbox" id="optDesk"><span><b>24 inch monitor, keyboard, and mouse ($130)</b><small>Add this if you are starting from nothing.</small></span></label>
+          <div class="taxrow"><label for="tax" style="cursor:default">Sales tax %</label><input id="tax" type="number" min="0" max="15" step="0.001" value="8.625"><small style="color:var(--muted)">Set to the Oklahoma City combined rate. Change it for your city.</small></div>
+        </div>
+        <div class="checks"><h4>Compatibility checks</h4><ul id="bChecks"></ul></div>
+        <p class="foot">Demo only. Prices are sample estimates from November 2026. Memory and storage prices are unusually high right now and change weekly, so check a live listing before you buy.</p>
+      </div>
+      <div class="scroll" id="catView" hidden></div>
+    </section>
+  </div>
+
+  <!-- Workflow: trigger and actions -->
+  <div class="cols" id="view-workflow" hidden>
+    <section class="panel" aria-label="Request workflow">
+      <div class="panel-head"><h2>Request workflow</h2><span class="pill note" id="zapRun">No runs yet</span></div>
+      <div class="scroll">
+        <p class="lead">Every customer message starts this workflow. One trigger sets off five actions, and each step hands its result to the next one.</p>
+        <ol class="zap" id="zap"></ol>
+      </div>
+    </section>
+    <section class="panel" aria-label="Tickets and follow-up">
+      <div class="panel-head"><h2>Tickets and follow-up</h2></div>
+      <div class="scroll">
+        <h4 class="lbl">Run a test request</h4>
+        <div class="chips flat" id="zapTests"></div>
+        <h4 class="lbl">Ticket log</h4>
+        <div class="tkwrap" id="tickets"></div>
+        <h4 class="lbl">Follow-up message draft</h4>
+        <pre class="draft" id="follow"></pre>
+        <button class="btn ghost" id="copyFollow" type="button">Copy message</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Simulator -->
+  <div class="cols" id="view-simulator" hidden>
+    <section class="panel" aria-label="Build bench">
+      <div class="panel-head"><h2>Build bench</h2><button class="btn ghost" id="simClear" type="button">Clear bench</button></div>
+      <div class="scroll">
+        <h4 class="lbl">Pick a mission</h4>
+        <div class="chips flat" id="missions"></div>
+        <p class="lead" id="brief" style="margin-top:10px"></p>
+        <div class="meter"><div id="meterBar"></div></div>
+        <p class="spec" id="meterText" style="margin:6px 0 0"></p>
+        <div class="tower" id="tower"></div>
+        <div class="row">
+          <button class="btn" id="powerOn" type="button">Power on</button>
+          <button class="btn ghost" id="toAdvisor" type="button" disabled>Send build to the Advisor</button>
+        </div>
+      </div>
+    </section>
+    <section class="panel" aria-label="Parts shelf and startup screen">
+      <div class="panel-head"><h2 id="shelfTitle">Parts shelf</h2></div>
+      <div class="scroll">
+        <div id="shelf"></div>
+        <h4 class="lbl">Startup screen</h4>
+        <pre class="post" id="post" aria-live="polite">Add parts, then press Power on.</pre>
+        <div id="simResult"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Instructions and knowledge -->
+  <div class="cols" id="view-brain" hidden>
+    <section class="panel" aria-label="Chatbot instructions">
+      <div class="panel-head"><h2>Chatbot instructions</h2><button class="btn" id="applyBrain" type="button">Save changes</button></div>
+      <p class="hint">These are the rules the chatbot follows when live AI answers are on. Edit them, then save. <span class="pill note" id="brainMsg">Using the original files</span></p>
+      <label class="sr" for="instr">Chatbot instructions</label>
+      <textarea id="instr" spellcheck="false"></textarea>
+    </section>
+    <section class="panel" aria-label="Knowledge file">
+      <div class="panel-head"><h2>Knowledge file <span class="spec" id="kbCount"></span></h2><button class="btn ghost" id="restoreBrain" type="button">Restore original files</button></div>
+      <p class="hint">Help articles the chatbot answers from, in both modes. Each article needs a type, a title, keywords to listen for, and steps.</p>
+      <label class="sr" for="kb">Knowledge file</label>
+      <textarea id="kb" spellcheck="false"></textarea>
+    </section>
+  </div>
+</div>
+<script src="instructions.js"></script>
+<script src="knowledge.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
